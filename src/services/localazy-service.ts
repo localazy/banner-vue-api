@@ -1,148 +1,90 @@
-import LocalazyAPI from './localazy-api';
+import LocalazyApi from '../localazy-api/localazy-api';
 
-type Constructor = {
-    projectToken: string;
-    baseUrl?: string;
-}
-
-type StaticOptions = {
-    projectToken: string;
-    baseUrl?: string;
-}
-
-type NonStaticOptions = {
-    /** Optionally override initially set project token */
-    projectToken?: string;
-    baseUrl?: string;
-}
-
-type ListProjects = {
-    /** Add information about the owning organization. */
-    organization?: boolean;
-    /** Add information about languages. */
-    languages?: boolean;
-}
-
-type LocFileContentLanguage = {
-    [k: string]: string | string[] | LocFileContentLanguage;
-}
-
-type LocFileContent = {
-    /** The file type to be used for backing the strings. @see https://localazy.com/docs/api/import#response-1 */
-    type?: string;
-    plural?: string;
-    array?: string;
-    keyTransformer?: string;
-    params?: Record<string, any>;
-    features?: string[];
-} & LocFileContentLanguage;
-
-type LocFile = {
-    /** The file name */
-    name: string;
-    /** The path to the file without the file name. */
-    path?: string;
-    /** Optional module specification. */
-    module?: any;
-    /** Optional build type. */
-    buildType?: any;
-    library?: string;
-    /** Optional product flavors. */
-    productFlavors?: any;
-    content: LocFileContent;
-}
-
-type Import = {
-    projectId: string;
-    importAsNew?: boolean;
-    forceCurrent?: boolean;
-    filterSource?: boolean;
-    files: LocFile[];
-}
-
-type ListFiles = {
-    projectId: string;
-}
-
-type ListKeysInFile = {
-    projectId: string;
-    fileId: string;
-    /** Locale code {lang} must be in the format: ll-Scrp-RR */
-    lang: string;
-    deprecated?: boolean;
-    limit?: number;
-    next?: string;
-}
+const constants = {
+  fileName: 'banners',
+  projectSlug: 'banner-api-app',
+};
 
 class LocalazyService {
-    private projectToken!: string;
+    public api!: ReturnType<typeof LocalazyApi>;
 
-    private baseUrl!: string;
+    private project: any = null;
 
-    constructor(options: Constructor) {
-      this.projectToken = options.projectToken;
-      this.baseUrl = options.baseUrl || '';
-    }
-
-    /**
-     * @see https://localazy.com/docs/api/list-projects
-     */
-    public async listProjects(options: ListProjects = {}, config: NonStaticOptions = {}) {
-      return LocalazyAPI.get({
-        url: `${config.baseUrl || this.baseUrl}/projects`,
-        projectToken: config.projectToken || this.projectToken,
-        options,
+    constructor() {
+      this.api = LocalazyApi({
+        projectToken: '18388854163874116234d25d2dc44cbe35d9f5195dc84255e3a60bdfaa3d6274a226c22ae1e8919a0d80',
       });
     }
 
-    /**
-     * @see https://localazy.com/docs/api/import
-     */
-    public async import(options: Import, config: NonStaticOptions = {}) {
-      const { projectId, ...payload } = options;
-      return LocalazyAPI.post({
-        url: `${config.baseUrl || this.baseUrl}/projects/${projectId}/import`,
-        projectToken: config.projectToken || this.projectToken,
-        options: payload as Omit<Import, 'projectId'>,
+    async generateFile() {
+      await this.api.import({
+        projectId: (await this.fetchProject()).id,
+        files: [{
+          name: constants.fileName,
+          content: {
+            en: {
+              title: '',
+              label: '',
+            },
+          },
+        }],
       });
     }
 
-    /**
-     * @see https://localazy.com/docs/api/import#retrieve-a-list-of-available-file-types
-     */
-    public async listFormats(config: NonStaticOptions = {}) {
-      return LocalazyAPI.get({
-        url: `${config.baseUrl || this.baseUrl}/import/formats`,
-        projectToken: config.projectToken || this.projectToken,
-      });
+    async listProjectLanguages() {
+      return (await this.fetchProject()).languages;
     }
 
-    /**
-     * @see https://localazy.com/docs/api/files
-     */
-    public async listFiles(options: ListFiles, config: NonStaticOptions = {}) {
-      const { projectId } = options;
-      return LocalazyAPI.get({
-        url: `${config.baseUrl || this.baseUrl}/projects/${projectId}/files`,
-        projectToken: config.projectToken || this.projectToken,
-      });
+    async listKeysInFileForLanguage(language: string) {
+      const project = await this.fetchProject();
+      const file = await this.getFile(project.id);
+
+      if (!file) {
+        return {
+          status: 'file_does_not_exist',
+          keys: [],
+        };
+      }
+
+      try {
+        const keys = await this.api.listKeysInFileForLanguage({
+          projectId: project.id,
+          fileId: file.id,
+          lang: language,
+        });
+        return {
+          status: 'ok',
+          keys,
+        };
+      } catch (e) {
+        return {
+          status: 'language_not_found',
+          keys: [],
+        };
+      }
     }
 
-    /**
-         * @see https://localazy.com/docs/api/files#retrieve-a-list-of-keys-and-translations-from-file
-         */
-    public async listKeysInFileForLanguage(options: ListKeysInFile, config: NonStaticOptions = {}) {
-      const {
-        projectId, fileId, lang, ...payload
-      } = options;
-      return LocalazyAPI.get({
-        url: `${config.baseUrl || this.baseUrl}/projects/${projectId}/files/${fileId}/keys/${lang}`,
-        projectToken: config.projectToken || this.projectToken,
-        options: payload as Omit<ListKeysInFile, 'projectId' | 'fileId'>,
+    private async getFile(projectId: string) {
+      const files = await this.api.listFiles({
+        projectId,
       });
+
+      const file = files.find((f) => f.name === constants.fileName);
+      return file;
+    }
+
+    private async fetchProject() {
+      const projects = await this.api.listProjects({
+        languages: true,
+      });
+
+      const project = projects.find((p) => p.slug === constants.projectSlug);
+      if (!project) {
+        throw new Error('Project not found');
+      }
+      this.project = project;
+      return project;
     }
 }
 
-export default function LocalazyServiceFactory(options: Constructor) {
-    return new LocalazyService(options);
-  }
+export default new LocalazyService();

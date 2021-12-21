@@ -6,7 +6,7 @@ import BannerContainer from './components/BannerContainer.vue';
 
 <template>
   <suspense>
-    <banner-container class="container" />
+    <banner-container />
   </suspense>
 </template>
 
