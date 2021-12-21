@@ -6,7 +6,6 @@ type Common = {
 
 export default class LocalazyAPI {
   public static async get(options: Common) {
-    console.warn(options.options ? JSON.stringify(options.options) : undefined);
     const queryParams = options.options ? `?${LocalazyAPI.getQueryString(options.options)}` : '';
 
     const response = await fetch(`/api${options.url}${queryParams}`, {
