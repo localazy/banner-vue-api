@@ -28,9 +28,26 @@ const name = computed({
   }
 })
 
-const localazyService = new LocalazyService({
+const localazyService = LocalazyService({
     projectToken: "18388854163874116234d25d2dc44cbe35d9f5195dc84255e3a60bdfaa3d6274a226c22ae1e8919a0d80"
 })
+
+const projects = await localazyService.listProjects({
+    languages: true
+});
+const formats = await localazyService.listFormats();
+const files = await localazyService.listFiles({
+    "projectId": "_a8388854798791208508"
+});
+const english = await localazyService.listKeysInFileForLanguage({
+    projectId: "_a8388854798791208508",
+    fileId: "_e1140840109999",
+    lang: "en"
+})
+console.log(projects);
+console.log(formats)
+console.log(files)
+console.log(english)
 
 // console.log( await localazyService.listProjects({
 //     organization: true,

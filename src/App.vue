@@ -5,7 +5,9 @@ import BannerContainer from './components/BannerContainer.vue'
 </script>
 
 <template>
-  <banner-container />
+    <suspense>
+        <banner-container />
+    </suspense>
 </template>
 
 <style>

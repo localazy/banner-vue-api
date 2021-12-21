@@ -35,7 +35,6 @@ type LocFileContent = {
     keyTransformer?: string;
     params?: Record<string, any>;
     features?: string[];
-    // [locale: string]: LocFileContentKey;
 } & LocFileContentLanguage;
 
 type LocFile = {
@@ -61,24 +60,31 @@ type Import = {
     files: LocFile[];
 }
 
-export default class LocalazyService {
+type ListFiles = {
+    projectId: string;
+}
+
+type ListKeysInFile = {
+    projectId: string;
+    fileId: string;
+    /** Locale code {lang} must be in the format: ll-Scrp-RR */
+    lang: string;
+    deprecated?: boolean;
+    limit?: number;
+    next?: string;
+}
+
+export default function LocalazyServiceFactory(options: Constructor) {
+    return new LocalazyService(options);
+}
+
+class LocalazyService {
     private projectToken!: string;
     private baseUrl!: string;
 
     constructor(options: Constructor) {
         this.projectToken = options.projectToken;
         this.baseUrl = options.baseUrl || '';
-    }
-
-    /**
-     * @see https://localazy.com/docs/api/list-projects
-     */
-    public static async listProjects(config: StaticOptions, options: ListProjects = {}) {
-        return LocalazyAPI.get({
-            url: `${config.baseUrl || ''}/projects`,
-            projectToken: config.projectToken,
-            options 
-        })
     }
 
     /**
@@ -92,15 +98,9 @@ export default class LocalazyService {
         })
     }
 
-    public static async import(config: StaticOptions, options: Import) {
-        let {projectId, ...payload} = options;
-        return LocalazyAPI.post({
-            url: `${config.baseUrl || ''}/projects/${projectId}/import`,
-            projectToken: config.projectToken,
-            options: payload as Omit<Import, "projectId">
-        })
-    }
-
+    /**
+     * @see https://localazy.com/docs/api/import
+     */
     public async import(options: Import, config: NonStaticOptions = {}) {
         let {projectId, ...payload} = options;
         return LocalazyAPI.post({
@@ -109,4 +109,37 @@ export default class LocalazyService {
             options: payload as Omit<Import, "projectId">
         })
     }
+
+    /**
+     * @see https://localazy.com/docs/api/import#retrieve-a-list-of-available-file-types
+     */
+    public async listFormats(config: NonStaticOptions = {}) {
+        return LocalazyAPI.get({
+            url: `${config.baseUrl || this.baseUrl}/import/formats`,
+            projectToken: config.projectToken || this.projectToken,
+        })
+    }
+
+    /**
+     * @see https://localazy.com/docs/api/files
+     */
+        public async listFiles(options: ListFiles, config: NonStaticOptions = {}) {
+        let {projectId} = options;
+        return LocalazyAPI.get({
+            url: `${config.baseUrl || this.baseUrl}/projects/${projectId}/files`,
+            projectToken: config.projectToken || this.projectToken,
+        })
+    }
+
+        /**
+         * @see https://localazy.com/docs/api/files#retrieve-a-list-of-keys-and-translations-from-file
+         */
+         public async listKeysInFileForLanguage(options: ListKeysInFile, config: NonStaticOptions = {}) {
+            let {projectId, fileId, lang, ...payload} = options;
+            return LocalazyAPI.get({
+                url: `${config.baseUrl || this.baseUrl}/projects/${projectId}/files/${fileId}/keys/${lang}`,
+                projectToken: config.projectToken || this.projectToken,
+                options: payload as Omit<ListKeysInFile, "projectId" | "fileId">
+            })
+        }
 }
