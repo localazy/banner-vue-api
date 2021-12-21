@@ -5,41 +5,36 @@ type Common = {
 }
 
 export default class LocalazyAPI {
+  public static async get(options: Common) {
+    console.warn(options.options ? JSON.stringify(options.options) : undefined);
+    const queryParams = options.options ? `?${LocalazyAPI.getQueryString(options.options)}` : '';
 
-    public static async get(options: Common) {
-        console.warn(options.options ? JSON.stringify(options.options) : undefined)
-        let queryParams = options.options ? `?${LocalazyAPI.getQueryString(options.options)}` : ""
+    const response = await fetch(`/api${options.url}${queryParams}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${options.projectToken}`,
+      },
+    }).catch((e) => {
+      throw e;
+    });
+    return response.json();
+  }
 
-        const response = await fetch(`/api${options.url}${queryParams}`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${options.projectToken}`,
-            },
-        }).catch(e => {
-            throw e;
-        }) 
-        return response.json()
-    }
+  public static async post(options: Common) {
+    const response = await fetch(`/api${options.url}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${options.projectToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: options.options ? JSON.stringify(options.options) : undefined,
+    }).catch((e) => {
+      throw e;
+    });
+    return response.json();
+  }
 
-    public static async post(options: Common) {
-        const response = await fetch(`/api${options.url}`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${options.projectToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: options.options ? JSON.stringify(options.options) : undefined
-        }).catch(e => {
-            throw e;
-        }) 
-        return response.json()
-    }
-
-    private static getQueryString = (queries: Record<string, any>) => {
-        return Object.entries(queries)
-            .reduce((acc, [key, value]) => {
-                return [...acc, `${encodeURIComponent(key)}=${encodeURIComponent(value)}`]
-            }, [] as string[])
-            .join('&');
-    };
+    private static getQueryString = (queries: Record<string, any>) => Object.entries(queries)
+      .reduce((acc, [key, value]) => [...acc, `${encodeURIComponent(key)}=${encodeURIComponent(value)}`], [] as string[])
+      .join('&');
 }
