@@ -5,11 +5,6 @@ type Constructor = {
     baseUrl?: string;
 }
 
-type StaticOptions = {
-    projectToken: string;
-    baseUrl?: string;
-}
-
 type NonStaticOptions = {
     /** Optionally override initially set project token */
     projectToken?: string;
@@ -129,8 +124,8 @@ class LocalazyService {
     }
 
     /**
-         * @see https://localazy.com/docs/api/files#retrieve-a-list-of-keys-and-translations-from-file
-         */
+     * @see https://localazy.com/docs/api/files#retrieve-a-list-of-keys-and-translations-from-file
+     */
     public async listKeysInFileForLanguage(options: ListKeysInFile, config: NonStaticOptions = {}) {
       const {
         projectId, fileId, lang, ...payload

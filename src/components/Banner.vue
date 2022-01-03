@@ -5,10 +5,10 @@
   >
     <div class="box">
       <div class="title">
-        Drink milk
+        {{ title }}
       </div>
       <div class="label">
-        5 Proven Health Benefits of Milk
+        {{ label }}
       </div>
     </div>
     <div class="dimensions">
@@ -28,6 +28,14 @@ export default defineComponent({
     },
     height: {
       type: Number,
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    label: {
+      type: String,
       required: true,
     },
   },

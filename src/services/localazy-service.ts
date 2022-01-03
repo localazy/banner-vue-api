@@ -5,6 +5,12 @@ const constants = {
   projectSlug: 'banner-api-app',
 };
 
+type GenerateFile = {
+    languageCode: string;
+    title: string;
+    label: string;
+}
+
 class LocalazyService {
     public api!: ReturnType<typeof LocalazyApi>;
 
@@ -16,18 +22,20 @@ class LocalazyService {
       });
     }
 
-    async generateFile() {
+    async generateFile(options: GenerateFile) {
       await this.api.import({
         projectId: (await this.fetchProject()).id,
         files: [{
           name: constants.fileName,
           content: {
-            en: {
-              title: '',
-              label: '',
+            [options.languageCode]: {
+              title: options.title,
+              label: options.label,
             },
           },
         }],
+        forceCurrent: true,
+        filterSource: false,
       });
     }
 
@@ -35,7 +43,7 @@ class LocalazyService {
       return (await this.fetchProject()).languages;
     }
 
-    async listKeysInFileForLanguage(language: string) {
+    async listKeysInFileForLanguage(languageCode: string) {
       const project = await this.fetchProject();
       const file = await this.getFile(project.id);
 
@@ -47,14 +55,14 @@ class LocalazyService {
       }
 
       try {
-        const keys = await this.api.listKeysInFileForLanguage({
+        const data = await this.api.listKeysInFileForLanguage({
           projectId: project.id,
           fileId: file.id,
-          lang: language,
+          lang: languageCode,
         });
         return {
           status: 'ok',
-          keys,
+          keys: data.keys,
         };
       } catch (e) {
         return {
@@ -74,6 +82,7 @@ class LocalazyService {
     }
 
     private async fetchProject() {
+      if (this.project !== null) { return this.project; }
       const projects = await this.api.listProjects({
         languages: true,
       });
