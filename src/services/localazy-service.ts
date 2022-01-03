@@ -1,4 +1,4 @@
-import LocalazyApi from '../localazy-api/localazy-api';
+import LocalazyApi from '@localazy/ts-api';
 
 const constants = {
   fileName: 'banners',
