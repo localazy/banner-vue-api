@@ -5,10 +5,10 @@
   >
     <div class="box">
       <div class="title">
-        Drink milk
+        {{ title }}
       </div>
       <div class="label">
-        5 Proven Health Benefits of Milk
+        {{ label }}
       </div>
     </div>
     <div class="dimensions">
@@ -19,6 +19,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { Key } from '@localazy/ts-api/dist/models/responses/keys-in-file';
 
 export default defineComponent({
   props: {
@@ -30,11 +31,23 @@ export default defineComponent({
       type: Number,
       required: true,
     },
+    title: {
+      required: true,
+      validator: (prop: Key['value']) => typeof prop === 'string'
+      || Array.isArray(prop)
+      || (typeof prop === 'object' && prop !== null),
+    },
+    label: {
+      required: true,
+      validator: (prop: Key['value']) => typeof prop === 'string'
+      || Array.isArray(prop)
+      || (typeof prop === 'object' && prop !== null),
+    },
   },
 });
 </script>
 
-<style>
+<style scoped>
 .banner {
     display: flex;
     flex-direction: column;

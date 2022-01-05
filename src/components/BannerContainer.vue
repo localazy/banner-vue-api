@@ -1,77 +1,150 @@
 <template>
   <div class="wrapper">
-    <Banner
-      :width="300"
-      :height="250"
-    />
+    <div class="banners">
+      <banner
+        :width="300"
+        :height="250"
+        :title="currentData.title"
+        :label="currentData.label"
+      />
 
-    <Banner
-      :width="700"
-      :height="300"
-    />
+      <banner
+        :width="700"
+        :height="300"
+        :title="currentData.title"
+        :label="currentData.label"
+      />
 
-    <Banner
-      :width="160"
-      :height="600"
-    />
+      <banner
+        :width="160"
+        :height="600"
+        :title="currentData.title"
+        :label="currentData.label"
+      />
+    </div>
+
+    <div v-if="languageKeys.status === 'file_does_not_exist'">
+      File does not exist yet.
+      <button @click="generateFile">
+        Generate
+      </button>
+    </div>
+    <div v-else>
+      <language-options
+        :languages="languages"
+        v-model:language-code="currentData.languageCode"
+        v-model:new-language-code="newLanguageCode"
+        @change-language="onChangeLanguage"
+      />
+
+      <div class="mt-8">
+        <translation-input
+          v-for="data in languageKeys.keys"
+          class="mt-4"
+          :key=" data.key.join('.')"
+          v-model="currentData[data.key.join('.')]"
+        >
+          {{ data.key.join('.') }}
+        </translation-input>
+      </div>
+
+      <translation-buttons
+        @save="onSave"
+        @reset="resetKeysForCurrent"
+      />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
+import { Key } from '@localazy/ts-api/dist/models/responses/keys-in-file';
 import Banner from './Banner.vue';
 import LocalazyService from '../services/localazy-service';
+import KeysInFileForLanguage from '../models/keys-in-file-for-language';
+import LanguageOptions from './LanguageOptions.vue';
+import TranslationInput from './TranslationInput.vue';
+import TranslationButtons from './TranslationButtons.vue';
+
+type CurrentData = {
+    languageCode: string;
+    title: Key['value'];
+    label: Key['value'];
+}
 
 export default defineComponent({
-  emits: ['update:modelValue', 'submit'],
-  props: {
-    modelValue: {
-      type: String,
-      default: '',
-    },
+  components: {
+    Banner, LanguageOptions, TranslationInput, TranslationButtons,
   },
-  async setup(props, { emit }) {
-    const name = computed({
-      get() {
-        return props.modelValue;
-      },
-      set(val) {
-        emit('update:modelValue', val);
-      },
+  async setup() {
+    const languageKeys = ref<KeysInFileForLanguage>({ status: '', keys: [] });
+    const newLanguageCode = ref('');
+    const currentData = ref<CurrentData>({
+      languageCode: 'en',
+      title: '',
+      label: '',
     });
-    function submitHandler() {
-      emit('submit');
+
+    const languages = await LocalazyService.listProjectLanguages();
+
+    async function generateFile() {
+      await LocalazyService.generateFile({
+        languageCode: 'en',
+        title: 'Drink milk',
+        label: '5 Proven Health Benefits of Milk',
+      });
+      window.location.reload();
     }
-    const localazyService = LocalazyService({
-      projectToken: '18388854163874116234d25d2dc44cbe35d9f5195dc84255e3a60bdfaa3d6274a226c22ae1e8919a0d80',
-    });
-    const projects = await localazyService.listProjects({
-      languages: true,
-    });
-    const formats = await localazyService.listFormats();
-    const files = await localazyService.listFiles({
-      projectId: '_a8388854798791208508',
-    });
-    const english = await localazyService.listKeysInFileForLanguage({
-      projectId: '_a8388854798791208508',
-      fileId: '_e1140840109999',
-      lang: 'en',
-    });
-    console.log(projects);
-    console.log(formats);
-    console.log(files);
-    console.log(english);
+
+    async function resetKeysForCurrent() {
+      await LocalazyService.generateFile({
+        languageCode: currentData.value.languageCode,
+        title: '',
+        label: '',
+      });
+      languageKeys.value = await LocalazyService.listKeysInFileForLanguage(currentData.value.languageCode);
+      window.location.reload();
+    }
+
+    async function onSave() {
+      const language = newLanguageCode.value || currentData.value.languageCode;
+      await LocalazyService.generateFile({
+        languageCode: language,
+        title: currentData.value.title,
+        label: currentData.value.label,
+      });
+      window.location.reload();
+    }
+
+    async function onChangeLanguage() {
+      languageKeys.value = await LocalazyService.listKeysInFileForLanguage(currentData.value.languageCode);
+      currentData.value.title = languageKeys.value.keys.find((key) => key.key.includes('title'))?.value || '';
+      currentData.value.label = languageKeys.value.keys.find((key) => key.key.includes('label'))?.value || '';
+    }
+
+    await onChangeLanguage();
+
     return {
-      name,
-      submitHandler,
+      languageKeys,
+      generateFile,
+      languages,
+      currentData,
+      resetKeysForCurrent,
+      newLanguageCode,
+      onSave,
+      onChangeLanguage,
     };
   },
-  components: { Banner },
 });
 </script>
 
-<style>
+<style scoped>
 .wrapper {
+    width: 1200px;
+    margin: auto;
+}
+
+.banners {
     display: flex;
     padding: 16px;
     gap: 24px;
