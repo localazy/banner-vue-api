@@ -5,7 +5,7 @@ import KeysInFileForLanguage from '../models/keys-in-file-for-language';
 
 const constants = {
   fileName: 'banners',
-  projectSlug: 'banner-api-app',
+  projectSlug: 'banners-api',
 };
 
 type GenerateFile = {
@@ -21,7 +21,7 @@ class LocalazyService {
 
     constructor() {
       this.api = LocalazyApi({
-        projectToken: '18388854163874116234d25d2dc44cbe35d9f5195dc84255e3a60bdfaa3d6274a226c22ae1e8919a0d80',
+        projectToken: '18370618047140320971597ee3db7d72e0e53258209ccf95fb0fca70005ad8b65b9b5593746455acc3f5',
       });
     }
 
