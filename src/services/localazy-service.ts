@@ -1,4 +1,7 @@
 import LocalazyApi from '@localazy/ts-api';
+import Project from '@localazy/ts-api/dist/models/responses/project';
+import { Key } from '@localazy/ts-api/dist/models/responses/keys-in-file';
+import KeysInFileForLanguage from '../models/keys-in-file-for-language';
 
 const constants = {
   fileName: 'banners',
@@ -7,14 +10,14 @@ const constants = {
 
 type GenerateFile = {
     languageCode: string;
-    title: string;
-    label: string;
+    title: Key['value'];
+    label: Key['value'];
 }
 
 class LocalazyService {
     public api!: ReturnType<typeof LocalazyApi>;
 
-    private project: any = null;
+    private project: Project | null = null;
 
     constructor() {
       this.api = LocalazyApi({
@@ -23,7 +26,7 @@ class LocalazyService {
     }
 
     async generateFile(options: GenerateFile) {
-      await this.api.import({
+      return this.api.import({
         projectId: (await this.fetchProject()).id,
         files: [{
           name: constants.fileName,
@@ -43,7 +46,7 @@ class LocalazyService {
       return (await this.fetchProject()).languages;
     }
 
-    async listKeysInFileForLanguage(languageCode: string) {
+    async listKeysInFileForLanguage(languageCode: string): Promise<KeysInFileForLanguage> {
       const project = await this.fetchProject();
       const file = await this.getFile(project.id);
 

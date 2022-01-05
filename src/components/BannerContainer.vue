@@ -1,21 +1,21 @@
 <template>
   <div class="wrapper">
     <div class="banners">
-      <Banner
+      <banner
         :width="300"
         :height="250"
         :title="currentData.title"
         :label="currentData.label"
       />
 
-      <Banner
+      <banner
         :width="700"
         :height="300"
         :title="currentData.title"
         :label="currentData.label"
       />
 
-      <Banner
+      <banner
         :width="160"
         :height="600"
         :title="currentData.title"
@@ -23,73 +23,63 @@
       />
     </div>
 
-    <div class="language-menu">
-      <div v-if="languageKeys.status === 'file_does_not_exist'">
-        File does not exist yet.
-        <button @click="generateFile">
-          Generate
-        </button>
+    <div v-if="languageKeys.status === 'file_does_not_exist'">
+      File does not exist yet.
+      <button @click="generateFile">
+        Generate
+      </button>
+    </div>
+    <div v-else>
+      <language-options
+        :languages="languages"
+        v-model:language-code="currentData.languageCode"
+        v-model:new-language-code="newLanguageCode"
+        @change-language="onChangeLanguage"
+      />
+
+      <div class="mt-8">
+        <translation-input
+          v-for="data in languageKeys.keys"
+          class="mt-4"
+          :key=" data.key.join('.')"
+          v-model="currentData[data.key.join('.')]"
+        >
+          {{ data.key.join('.') }}
+        </translation-input>
       </div>
-      <div v-else>
-        Select language:
-        <select
-          v-model="currentData.languageCode"
-          @change="onChangeLanguage"
-        >
-          <option
-            v-for="language in languages"
-            :key="language.id"
-            :value="language.code"
-          >
-            {{ language.name }}
-          </option>
-        </select>
-        or add new <input
-          v-model="newLanguageCode"
-          placeholder="new language code"
-        >
 
-        <br>
-
-        <div class="mt-8">
-          <div
-            v-for="data in languageKeys.keys"
-            :key=" data.key.join('.')"
-            class="mt-4"
-          >
-            <span class="mr-4">{{ data.key.join('.') }}</span>
-            <input
-              v-model="currentData[data.key.join('.')]"
-            >
-          </div>
-        </div>
-
-        <button
-          @click="onSave"
-          class="mt-8 mr-4"
-        >
-          Save
-        </button>
-
-        <button @click="resetForKeysCurrent">
-          Reset keys for current language
-        </button>
-      </div>
+      <translation-buttons
+        @save="onSave"
+        @reset="resetKeysForCurrent"
+      />
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import { Key } from '@localazy/ts-api/dist/models/responses/keys-in-file';
 import Banner from './Banner.vue';
 import LocalazyService from '../services/localazy-service';
 import KeysInFileForLanguage from '../models/keys-in-file-for-language';
+import LanguageOptions from './LanguageOptions.vue';
+import TranslationInput from './TranslationInput.vue';
+import TranslationButtons from './TranslationButtons.vue';
+
+type CurrentData = {
+    languageCode: string;
+    title: Key['value'];
+    label: Key['value'];
+}
 
 export default defineComponent({
+  components: {
+    Banner, LanguageOptions, TranslationInput, TranslationButtons,
+  },
   async setup() {
     const languageKeys = ref<KeysInFileForLanguage>({ status: '', keys: [] });
     const newLanguageCode = ref('');
-    const currentData = ref({
+    const currentData = ref<CurrentData>({
       languageCode: 'en',
       title: '',
       label: '',
@@ -106,7 +96,7 @@ export default defineComponent({
       window.location.reload();
     }
 
-    async function resetForKeysCurrent() {
+    async function resetKeysForCurrent() {
       await LocalazyService.generateFile({
         languageCode: currentData.value.languageCode,
         title: '',
@@ -139,17 +129,16 @@ export default defineComponent({
       generateFile,
       languages,
       currentData,
-      resetForKeysCurrent,
+      resetKeysForCurrent,
       newLanguageCode,
       onSave,
       onChangeLanguage,
     };
   },
-  components: { Banner },
 });
 </script>
 
-<style>
+<style scoped>
 .wrapper {
     width: 1200px;
     margin: auto;
@@ -159,25 +148,5 @@ export default defineComponent({
     display: flex;
     padding: 16px;
     gap: 24px;
-}
-
-.mt-4 {
-    margin-top: 4px;
-}
-
-.mt-8 {
-    margin-top: 8px;
-}
-
-.mb-8 {
-    margin-bottom: 8px;
-}
-
-.mr-4 {
-    margin-right: 4px;
-}
-
-.language-menu {
-
 }
 </style>

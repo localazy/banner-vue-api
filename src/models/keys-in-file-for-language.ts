@@ -1,6 +1,8 @@
+import { Key } from '@localazy/ts-api/dist/models/responses/keys-in-file';
+
 type KeysInFileForLanguage = {
     status: string;
-    keys: any[];
+    keys: Key[];
 }
 
 export default KeysInFileForLanguage;

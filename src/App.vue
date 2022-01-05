@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
 import BannerContainer from './components/BannerContainer.vue';
 </script>
 
@@ -12,7 +10,7 @@ import BannerContainer from './components/BannerContainer.vue';
 
 <style>
 body {
-    margin: 0;
+  margin: 0;
 }
 
 #app {
@@ -20,4 +18,21 @@ body {
   min-height: 100vh;
   min-width: 100vw;
 }
+
+.mt-4 {
+    margin-top: 4px;
+}
+
+.mt-8 {
+    margin-top: 8px;
+}
+
+.mb-8 {
+    margin-bottom: 8px;
+}
+
+.mr-4 {
+    margin-right: 4px;
+}
+
 </style>

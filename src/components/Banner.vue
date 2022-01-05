@@ -19,6 +19,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { Key } from '@localazy/ts-api/dist/models/responses/keys-in-file';
 
 export default defineComponent({
   props: {
@@ -31,18 +32,22 @@ export default defineComponent({
       required: true,
     },
     title: {
-      type: String,
       required: true,
+      validator: (prop: Key['value']) => typeof prop === 'string'
+      || Array.isArray(prop)
+      || (typeof prop === 'object' && prop !== null),
     },
     label: {
-      type: String,
       required: true,
+      validator: (prop: Key['value']) => typeof prop === 'string'
+      || Array.isArray(prop)
+      || (typeof prop === 'object' && prop !== null),
     },
   },
 });
 </script>
 
-<style>
+<style scoped>
 .banner {
     display: flex;
     flex-direction: column;
