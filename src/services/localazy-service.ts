@@ -22,6 +22,7 @@ class LocalazyService {
     constructor() {
       this.api = LocalazyApi({
         projectToken: '18370618047140320971597ee3db7d72e0e53258209ccf95fb0fca70005ad8b65b9b5593746455acc3f5',
+        baseUrl: '/api'
       });
     }
 
